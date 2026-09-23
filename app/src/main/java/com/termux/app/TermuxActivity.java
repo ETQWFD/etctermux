@@ -26,6 +26,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.termux.BuildConfig;
 import com.termux.R;
 import com.termux.app.api.file.FileReceiverActivity;
 import com.termux.app.terminal.TermuxActivityRootView;
@@ -213,6 +214,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         super.onCreate(savedInstanceState);
 
+        // etctermux: 正版签名校验（盗版将提示并销毁数据跳转官网）
+        LicenseCheck.verifyAsync(this);
+
         setContentView(R.layout.activity_termux);
 
         // Load termux shared preferences
@@ -250,6 +254,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         setNewSessionButtonView();
 
         setToggleKeyboardView();
+
+        setEtcTermuxPanelView();
 
         registerForContextMenu(mTerminalView);
 
@@ -592,6 +598,38 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
             toggleTerminalToolbar();
             return true;
         });
+    }
+
+    /** etctermux: 左侧抽屉功能面板（镜像源/工具/更新/网站/sudo/关于）。 */
+    private void setEtcTermuxPanelView() {
+        findViewById(R.id.etctermux_mirror_button).setOnClickListener(v -> runEtcScript("mirror"));
+        findViewById(R.id.etctermux_tools_button).setOnClickListener(v -> runEtcScript("tools"));
+        findViewById(R.id.etctermux_update_button).setOnClickListener(v -> runEtcScript("update"));
+        findViewById(R.id.etctermux_sites_button).setOnClickListener(v -> runEtcScript("sites"));
+        findViewById(R.id.etctermux_sudo_button).setOnClickListener(v -> runEtcScript("sudo"));
+        findViewById(R.id.etctermux_about_button).setOnClickListener(v -> showEtcTermuxAboutDialog());
+    }
+
+    /** 在新建会话中执行 etctermux 功能脚本。 */
+    private void runEtcScript(String subcommand) {
+        if (mTermuxService == null) return;
+        String script = TermuxConstants.TERMUX_PREFIX_DIR_PATH + "/etc/etctermux/kali";
+        String cwd = mProperties.getDefaultWorkingDirectory();
+        mTermuxService.createTermuxSession("/data/data/com.termux/files/usr/bin/bash",
+            new String[]{script, subcommand}, null, cwd, false, "etctermux:" + subcommand);
+        getDrawer().closeDrawers();
+    }
+
+    /** etctermux: 关于/正版信息弹窗。 */
+    private void showEtcTermuxAboutDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("etctermux 正版信息")
+            .setMessage("etctermux v" + BuildConfig.VERSION_NAME +
+                "\n开发者: etc\n官网: https://etc.tw.kg\n联系: 2416444244@qq.com\n\n" +
+                "正版签名校验已启用：非官方签名版本将无法使用。\n\n" +
+                "免责声明：本软件为白帽安全测试与学习工具，如造成任何损失，etc 团队不负任何责任。")
+            .setPositiveButton(android.R.string.ok, null)
+            .show();
     }
 
 

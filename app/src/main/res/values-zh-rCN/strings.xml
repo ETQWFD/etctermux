@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="application_name">etctermux</string>
+    <string name="shared_user_label">etctermux 用户</string>
+
+    <!-- 引导安装 -->
+    <string name="bootstrap_installer_body">正在安装引导环境…</string>
+    <string name="bootstrap_error_title">无法安装引导环境</string>
+    <string name="bootstrap_error_abort">中止</string>
+    <string name="bootstrap_error_try_again">重试</string>
+
+    <!-- 会话与抽屉 -->
+    <string name="action_new_session">新建会话</string>
+    <string name="action_new_session_failsafe">安全模式</string>
+    <string name="title_max_terminals_reached">会话数量已达上限</string>
+    <string name="msg_max_terminals_reached">请先关闭部分会话再新建。</string>
+    <string name="title_rename_session">重命名会话</string>
+    <string name="action_rename_session_confirm">确定</string>
+    <string name="title_create_named_session">新建命名会话</string>
+    <string name="action_create_named_session_confirm">创建</string>
+    <string name="action_toggle_soft_keyboard">键盘</string>
+    <string name="action_open_settings">打开设置</string>
+    <string name="action_open_help">帮助</string>
+    <string name="action_report_issue">反馈问题</string>
+    <string name="action_kill_process">结束进程</string>
+    <string name="title_confirm_kill_process">确认结束进程</string>
+
+    <!-- 工具栏 -->
+    <string name="msg_enabling_terminal_toolbar">正在启用工具栏</string>
+    <string name="msg_disabling_terminal_toolbar">正在禁用工具栏</string>
+
+    <!-- 设置 -->
+    <string name="title_activity_termux_settings">etctermux 设置</string>
+    <string name="termux_preferences_title">首选项</string>
+    <string name="termux_preferences_summary">配置 etctermux 终端</string>
+    <string name="about_preference_title">关于</string>
+
+    <!-- 文件接收 -->
+    <string name="title_file_received">收到文件</string>
+    <string name="action_file_received_edit">编辑</string>
+    <string name="action_file_received_open_directory">打开目录</string>
+
+    <!-- 错误提示 -->
+    <string name="error_termux_service_start_failed_general">无法启动终端服务</string>
+    <string name="error_termux_service_start_failed_bg">应用处于后台，无法启动终端服务</string>
+
+</resources>

@@ -16,9 +16,9 @@ bash "$ETC/mirror" --apply tuna >/dev/null 2>&1
 echo "[2/5] 更新软件包索引（apt update）..."
 apt-get update -y >/dev/null 2>&1 && echo "      apt update 完成" || echo "      apt update 失败（可稍后输入 mirror 切换其他镜像重试）"
 
-# [3/5] 安装基础安全测试工具（逐个安装，失败自动跳过）
-echo "[3/5] 安装基础安全测试工具..."
-for p in nmap hydra sqlmap nikto dnsutils netcat curl wget git python python-pip openssh tsu proot fakeroot traceroute whois unzip zip jq; do
+# [3/5] 安装内置工具链（git/python/nodejs/npm/java 等）与基础安全测试工具
+echo "[3/5] 安装内置工具链与基础安全测试工具（逐个安装，失败自动跳过）..."
+for p in git python python-pip nodejs npm openjdk-17 nmap hydra sqlmap nikto dnsutils netcat curl wget openssh tsu proot fakeroot traceroute whois unzip zip jq; do
     if apt-get install -y "$p" >/dev/null 2>&1; then
         echo "      ✓ $p"
     else

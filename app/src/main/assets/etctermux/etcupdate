@@ -29,7 +29,21 @@ DIR="$HOME/storage/shared/termux_kali_etc"
 mkdir -p "$DIR" 2>/dev/null
 APK="$DIR/etctermux-$LATEST.apk"
 
-URL=$(echo "$JSON" | grep -m1 '"browser_download_url"' | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')
+# 按设备 ABI 匹配对应 APK
+ABI=$(uname -m 2>/dev/null || echo unknown)
+case "$ABI" in
+    aarch64) WANT="arm64-v8a" ;;
+    armv7*|armv6*|arm) WANT="armeabi-v7a" ;;
+    x86_64) WANT="x86_64" ;;
+    i686|x86) WANT="x86" ;;
+    *) WANT="universal" ;;
+esac
+echo "  设备架构: $ABI → 下载 $WANT 版本"
+
+URL=$(echo "$JSON" | grep '"browser_download_url"' | grep "$WANT" | grep -m1 -o 'https://[^"]*\.apk')
+if [ -z "$URL" ]; then
+    URL=$(echo "$JSON" | grep -m1 '"browser_download_url"' | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')
+fi
 if [ -z "$URL" ]; then
     echo "✗ 未找到 APK 下载地址"
     exit 1

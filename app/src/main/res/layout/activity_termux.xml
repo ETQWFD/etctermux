@@ -68,6 +68,84 @@
                     android:choiceMode="singleChoice"
                     android:longClickable="true" />
 
+                <!-- etctermux 功能面板 -->
+                <LinearLayout
+                    android:id="@+id/etctermux_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="⚡ etctermux 功能"
+                        android:textSize="12sp"
+                        android:padding="4dp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/termuxActivityDrawerImageTint" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_mirror_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="镜像源" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_tools_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="工具菜单" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_update_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="检查更新" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_sites_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="白帽网站" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_sudo_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="sudo" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_about_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="关于" />
+                    </LinearLayout>
+                </LinearLayout>
+
                 <LinearLayout
                     style="?android:attr/buttonBarStyle"
                     android:layout_width="match_parent"
