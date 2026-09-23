@@ -218,6 +218,13 @@ final class TermuxInstaller {
 
                     Logger.logInfo(LOG_TAG, "Bootstrap packages installed successfully.");
 
+                    // etctermux: apply Kali-style customization (banner, mirror switch, tools menu, updater, sudo)
+                    try {
+                        EtcTermuxSetup.apply(activity);
+                    } catch (Exception e) {
+                        Logger.logErrorExtended(LOG_TAG, "Failed to apply etctermux customization: " + e.getMessage());
+                    }
+
                     // Recreate env file since termux prefix was wiped earlier
                     TermuxShellEnvironment.writeEnvironmentToFile(activity);
 

@@ -1,0 +1,54 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux 版本更新检测 =================
+# 检测 GitHub 最新 Release，自动下载到共享目录并打开安装器
+export PATH="$PREFIX/bin:$PATH"
+ETC="$PREFIX/etc/etctermux"
+REPO="etqwfd/etctermux"
+
+CUR=$(cat "$ETC/version" 2>/dev/null || echo "0.0.0")
+echo "[etctermux] 正在检测最新版本..."
+
+API="https://api.github.com/repos/$REPO/releases/latest"
+JSON=$(curl -s --max-time 20 "$API")
+LATEST=$(echo "$JSON" | grep -m1 '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+
+if [ -z "$LATEST" ]; then
+    echo "✗ 无法连接 GitHub，请检查网络（可稍后重试）"
+    exit 1
+fi
+
+echo "  当前版本: v$CUR"
+echo "  最新版本: v$LATEST"
+
+if [ "$CUR" = "$LATEST" ]; then
+    echo "✓ 已是最新版本"
+    exit 0
+fi
+
+DIR="$HOME/storage/shared/termux_kali_etc"
+mkdir -p "$DIR" 2>/dev/null
+APK="$DIR/etctermux-$LATEST.apk"
+
+URL=$(echo "$JSON" | grep -m1 '"browser_download_url"' | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')
+if [ -z "$URL" ]; then
+    echo "✗ 未找到 APK 下载地址"
+    exit 1
+fi
+
+echo "  下载地址: $URL"
+echo "  正在下载到: $APK"
+curl -L --progress-bar -o "$APK" "$URL"
+if [ ! -f "$APK" ] || [ "$(stat -c%s "$APK" 2>/dev/null || echo 0)" -lt 1000000 ]; then
+    echo "✗ 下载失败或文件不完整"
+    rm -f "$APK"
+    exit 1
+fi
+
+echo "✓ 下载完成: $APK"
+echo "  正在打开安装器..."
+# 优先使用 termux-open（自动授权文件访问）
+termux-open "$APK" 2>/dev/null \
+  || am start -a android.intent.action.VIEW -d "file://$APK" -t "application/vnd.android.package-archive" 2>/dev/null \
+  || echo "请手动打开文件管理器安装: $APK"
+echo
+echo "提示: 安装前需在系统设置中允许“安装未知应用”"

@@ -1,0 +1,139 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux 功能菜单 =================
+# 输入 kali 打开本菜单
+export PATH="$PREFIX/bin:$PATH"
+ETC="$PREFIX/etc/etctermux"
+VER=$(cat "$ETC/version" 2>/dev/null || echo "?")
+SHARED_DIR="$HOME/storage/shared/termux_kali_etc"
+
+install_pkgs() {
+    local label="$1"; shift
+    echo "==> 安装 [$label]..."
+    for p in "$@"; do
+        if apt-get install -y "$p" >/dev/null 2>&1; then
+            echo "    ✓ $p"
+        else
+            echo "    ✗ $p (失败/跳过)"
+        fi
+    done
+}
+
+tools_menu() {
+    while true; do
+        echo
+        echo "======== 安装安全测试工具 (etctermux) ========"
+        echo "  1) 信息收集     (nmap masscan recon-ng sherlock theharvester ...)"
+        echo "  2) 漏洞扫描     (nikto nuclei wpscan gobuster ffuf wfuzz ...)"
+        echo "  3) Web 渗透     (sqlmap commix wafw00f xsstrike ...)"
+        echo "  4) 密码攻击     (hydra john crunch medusa wordlists ...)"
+        echo "  5) 无线安全     (aircrack-ng wifite ...)"
+        echo "  6) 嗅探/代理    (bettercap tcpdump netcat ...)"
+        echo "  7) 取证分析     (binwalk foremost steghide exiftool ...)"
+        echo "  8) 完整 Kali 环境 (proot-distro install kali，含全部 Kali 工具)"
+        echo "  9) 全部核心工具 (以上轻量工具全部安装)"
+        echo "  0) 返回上级菜单"
+        printf "请选择: "
+        read -r opt
+        case "$opt" in
+            1) install_pkgs "信息收集" nmap masscan recon-ng sherlock theharvester dnsutils whois traceroute ;;
+            2) install_pkgs "漏洞扫描" nikto nuclei wpscan gobuster ffuf wfuzz dirb ;;
+            3) install_pkgs "Web 渗透" sqlmap commix wafw00f xsstrike ;;
+            4) install_pkgs "密码攻击" hydra john crunch medusa wordlists ;;
+            5) install_pkgs "无线安全" aircrack-ng wifite ;;
+            6) install_pkgs "嗅探/代理" bettercap tcpdump netcat ;;
+            7) install_pkgs "取证分析" binwalk foremost steghide exiftool ;;
+            8) echo "安装完整 Kali 环境（体积较大，请耐心等待）..."; pkg install -y proot-distro && proot-distro install kali && echo "启动: proot-distro login kali" ;;
+            9) install_pkgs "核心工具" nmap masscan recon-ng sherlock theharvester dnsutils whois traceroute nikto nuclei wpscan gobuster ffuf wfuzz sqlmap commix wafw00f xsstrike hydra john crunch medusa wordlists aircrack-ng tcpdump netcat binwalk foremost steghide exiftool bettercap ;;
+            0) return ;;
+            *) echo "无效选项" ;;
+        esac
+    done
+}
+
+sites_menu() {
+    local sites=(
+        "OWASP 官方(安全知识)" "https://owasp.org"
+        "PortSwigger Web安全学院" "https://portswigger.net/web-security"
+        "Hack The Box(靶场)" "https://www.hackthebox.com"
+        "TryHackMe(靶场)" "https://tryhackme.com"
+        "HackerOne(漏洞赏金)" "https://www.hackerone.com"
+        "Bugcrowd(漏洞赏金)" "https://www.bugcrowd.com"
+        "Vulhub(漏洞环境)" "https://vulhub.org"
+        "DVWA 靶场(GitHub)" "https://github.com/digininja/DVWA"
+        "PentesterLab(练习)" "https://pentesterlab.com"
+        "漏洞盒子 Vulbox" "https://www.vulbox.com"
+        "补天漏洞响应平台" "https://www.butian.net"
+        "先知社区(阿里)" "https://xz.aliyun.com"
+        "FreeBuf 安全媒体" "https://www.freebuf.com"
+        "看雪论坛" "https://www.kanxue.com"
+        "Seebug 漏洞文库" "https://paper.seebug.org"
+        "嘶吼专业版" "https://www.4hou.com"
+    )
+    while true; do
+        echo
+        echo "======== 白帽学习 / 测试网站 (etctermux) ========"
+        local i=1
+        for ((j=0; j<${#sites[@]}; j+=2)); do
+            echo "  $i) ${sites[$j]}"
+            i=$((i+1))
+        done
+        echo "  0) 返回上级菜单"
+        printf "请选择(将用浏览器打开): "
+        read -r opt
+        if [ "$opt" = "0" ]; then return; fi
+        local idx=$(( (opt-1) * 2 ))
+        if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#sites[@]}" ]; then
+            local url="${sites[$((idx+1))]}"
+            echo "打开: $url"
+            termux-open "$url" 2>/dev/null || am start -a android.intent.action.VIEW -d "$url" 2>/dev/null || echo "打开失败: $url"
+        else
+            echo "无效选项"
+        fi
+    done
+}
+
+storage_menu() {
+    while true; do
+        echo
+        echo "======== 共享存储管理 (etctermux) ========"
+        echo "  1) 授权并创建 /storage/emulated/0/termux_kali_etc"
+        echo "  2) 查看目录内容"
+        echo "  3) 显示当前版本信息"
+        echo "  0) 返回上级菜单"
+        printf "请选择: "
+        read -r opt
+        case "$opt" in
+            1) termux-setup-storage >/dev/null 2>&1; sleep 1; mkdir -p "$SHARED_DIR" && echo "✓ $SHARED_DIR 就绪" || echo "✗ 未授权存储,请允许弹窗后重试" ;;
+            2) ls -la "$SHARED_DIR" 2>/dev/null || echo "目录不存在,请先选择 1)" ;;
+            3) echo "当前版本: v$VER | 存储: $SHARED_DIR" ;;
+            0) return ;;
+            *) echo "无效选项" ;;
+        esac
+    done
+}
+
+while true; do
+    echo
+    echo "=========== etctermux v$VER ==========="
+    echo "  1) 安装安全测试工具（分类）"
+    echo "  2) 切换镜像源（清华/中科大/阿里云等）"
+    echo "  3) 检查更新并安装新版"
+    echo "  4) 打开白帽学习/测试网站"
+    echo "  5) sudo 模拟 root（设备未 root 也可用）"
+    echo "  6) 共享存储管理（termux_kali_etc）"
+    echo "  7) 关于/帮助"
+    echo "  0) 退出"
+    printf "请选择: "
+    read -r opt
+    case "$opt" in
+        1) tools_menu ;;
+        2) bash "$ETC/mirror" ;;
+        3) bash "$ETC/etcupdate" ;;
+        4) sites_menu ;;
+        5) bash "$ETC/sudo" /bin/bash ;;
+        6) storage_menu ;;
+        7) echo "开发者: etc | 版本: v$VER | 仓库: github.com/etqwfd/etctermux"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate 可直接调用对应功能" ;;
+        0) break ;;
+        *) echo "无效选项" ;;
+    esac
+done

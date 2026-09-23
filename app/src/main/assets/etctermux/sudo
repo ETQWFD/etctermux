@@ -1,0 +1,24 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux sudo（root 权限模拟）=================
+# 优先使用真实 su（设备已 root）；否则用 proot/fakeroot 模拟 root 环境
+# 注意: 模拟 root 不是真实 root，无法修改系统分区；真实 root 需要设备已解锁并安装 su
+export PATH="$PREFIX/bin:$PATH"
+
+CMD="$*"
+[ -z "$CMD" ] && CMD="/bin/bash"
+
+if command -v su >/dev/null 2>&1 && su -c true 2>/dev/null; then
+    echo "[etctermux] 使用真实 root (su)"
+    exec su -c "$CMD"
+elif command -v proot >/dev/null 2>&1; then
+    echo "[etctermux] 设备未 root，使用 proot 模拟 root（非真实 root）"
+    exec proot -0 -w "$HOME" /bin/bash -c "$CMD"
+elif command -v fakeroot >/dev/null 2>&1; then
+    echo "[etctermux] 使用 fakeroot 模拟 root（非真实 root）"
+    exec fakeroot /bin/bash -c "$CMD"
+else
+    echo "[etctermux] 未找到 su/proot/fakeroot"
+    echo "  安装模拟工具: pkg install proot tsu"
+    echo "  提示: 无 root 的手机无法获得真实 root 权限，proot/tsu 仅模拟环境供测试学习"
+    exit 1
+fi

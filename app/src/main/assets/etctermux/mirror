@@ -1,0 +1,72 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux 镜像源切换 =================
+# 用法: mirror [名称]  ; 不带参数时进入交互菜单
+# 可选: tuna / ustc / aliyun / bfsu / nju / official
+export PATH="$PREFIX/bin:$PATH"
+ETC="$PREFIX/etc/etctermux"
+
+SOURCES_LIST="$PREFIX/etc/apt/sources.list"
+
+declare -A MIRRORS
+MIRRORS[tuna]="https://mirrors.tuna.tsinghua.edu.cn/termux/apt/termux-main|清华 TUNA"
+MIRRORS[ustc]="https://mirrors.ustc.edu.cn/termux/apt/termux-main|中科大 USTC"
+MIRRORS[aliyun]="https://mirrors.aliyun.com/termux/apt/termux-main|阿里云"
+MIRRORS[bfsu]="https://mirrors.bfsu.edu.cn/termux/apt/termux-main|北外 BFSU"
+MIRRORS[nju]="https://mirrors.nju.edu.cn/termux/apt/termux-main|南京大学 NJU"
+MIRRORS[official]="https://packages.termux.dev/apt/termux-main|官方默认"
+
+apply_mirror() {
+    local name="$1"
+    local entry="${MIRRORS[$name]}"
+    [ -z "$entry" ] && { echo "未知镜像: $name"; return 1; }
+    local url="${entry%%|*}"
+    local label="${entry##*|}"
+    local arch
+    arch=$(dpkg --print-architecture 2>/dev/null || echo aarch64)
+
+    # 查找签名密钥
+    local key="$PREFIX/etc/termux/termux-main.pub"
+    [ -f "$key" ] || key="$PREFIX/etc/apt/termux-main.pub"
+    local signed_by=""
+    [ -f "$key" ] && signed_by=" signed-by=$key"
+
+    [ -f "$SOURCES_LIST" ] && [ ! -f "$SOURCES_LIST.bak" ] && cp "$SOURCES_LIST" "$SOURCES_LIST.bak"
+    echo "deb [arch=all,$arch$signed_by] $url stable main" > "$SOURCES_LIST"
+
+    echo "已切换到: $label"
+    echo "   $url"
+    echo "正在更新软件包索引..."
+    apt-get update -y >/dev/null 2>&1 && echo "✓ apt update 完成" || echo "✗ apt update 失败,请换一个镜像重试"
+}
+
+show_menu() {
+    while true; do
+        echo
+        echo "======== 镜像源切换 (etctermux) ========"
+        echo "当前: $(head -1 "$SOURCES_LIST" 2>/dev/null | grep -o 'https://[^ ]*')"
+        local i=1
+        for k in tuna ustc aliyun bfsu nju official; do
+            echo "  $i) ${MIRRORS[$k]##*|}"
+            i=$((i+1))
+        done
+        echo "  0) 退出"
+        printf "请选择: "
+        read -r opt
+        case "$opt" in
+            1) apply_mirror tuna ;;
+            2) apply_mirror ustc ;;
+            3) apply_mirror aliyun ;;
+            4) apply_mirror bfsu ;;
+            5) apply_mirror nju ;;
+            6) apply_mirror official ;;
+            0) return ;;
+            *) echo "无效选项" ;;
+        esac
+    done
+}
+
+if [ -n "$1" ]; then
+    apply_mirror "$1"
+else
+    show_menu
+fi

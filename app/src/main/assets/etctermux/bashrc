@@ -1,0 +1,31 @@
+# ================= etctermux shell 配置 =================
+# 此文件由 etctermux 安装器写入，修改后新会话生效
+export ETCTERMUX_VER="$(cat "$PREFIX/etc/etctermux/version" 2>/dev/null)"
+
+# ---- 常用别名 ----
+alias ll='ls -lFh'
+alias la='ls -lAFh'
+alias l='ls -CFh'
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+
+# ---- 确保功能脚本可调用 ----
+for _c in kali mirror etcupdate sudo; do
+    if [ ! -e "$PREFIX/bin/$_c" ]; then
+        ln -sf "$PREFIX/etc/etctermux/$_c" "$PREFIX/bin/$_c" 2>/dev/null
+    fi
+done
+
+# ---- Kali 风格提示符（可自行修改 PS1）----
+PS1='\[\e[38;5;46m\]┌──(\[\e[38;5;196m\]etctermux\[\e[0m\]\[\e[38;5;46m\]㉿\[\e[38;5;226m\]$(id -un 2>/dev/null)\[\e[0m\]\[\e[38;5;46m\])-(\[\e[38;5;39m\]\w\[\e[0m\]\[\e[38;5;46m\])\n\[\e[38;5;46m\]└─\[\e[0m\]\[\e[38;5;196m\]$(id -u 2>/dev/null)\[\e[0m\]\[\e[38;5;46m\]\$\[\e[0m\] '
+
+# ---- 首次启动自动配置（镜像源 / 基础工具 / 存储目录）----
+case $- in *i*)
+    if [ -f "$PREFIX/etc/etctermux/setup.sh" ] && [ ! -f "$PREFIX/etc/etctermux/.setup-done" ]; then
+        echo
+        echo "[etctermux] 首次启动，正在自动配置环境（镜像源/基础工具/存储目录）..."
+        echo "[etctermux] 如需跳过可随时中断，之后输入 kali 手动完成配置"
+        bash "$PREFIX/etc/etctermux/setup.sh"
+    fi
+esac

@@ -37,3 +37,6 @@ local.properties
 .swp
 ehthumbs.db
 Thumbs.db
+
+# Signing keystore (private)
+*.jks
