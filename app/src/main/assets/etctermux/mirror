@@ -24,11 +24,15 @@ apply_mirror() {
     local arch
     arch=$(dpkg --print-architecture 2>/dev/null || echo aarch64)
 
-    # 查找签名密钥
-    local key="$PREFIX/etc/termux/termux-main.pub"
-    [ -f "$key" ] || key="$PREFIX/etc/apt/termux-main.pub"
+    # 查找签名密钥（bootstrap 内置 termux-keyring）
+    local key=""
+    for k in "$PREFIX/share/termux-keyring/termux-autobuilds.gpg" \
+             "$PREFIX/etc/termux/termux-main.pub" \
+             "$PREFIX/etc/apt/termux-main.pub"; do
+        [ -f "$k" ] && { key="$k"; break; }
+    done
     local signed_by=""
-    [ -f "$key" ] && signed_by=" signed-by=$key"
+    [ -n "$key" ] && signed_by=" signed-by=$key"
 
     [ -f "$SOURCES_LIST" ] && [ ! -f "$SOURCES_LIST.bak" ] && cp "$SOURCES_LIST" "$SOURCES_LIST.bak"
     echo "deb [arch=all,$arch$signed_by] $url stable main" > "$SOURCES_LIST"

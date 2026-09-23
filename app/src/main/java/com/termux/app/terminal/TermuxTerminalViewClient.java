@@ -309,9 +309,13 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
             // Do not steal dedicated buttons from a full external keyboard.
             return false;
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            // etctermux: 长按音量- 打开右侧面板（AI 帮助/配置）
+            if (down && event.getRepeatCount() > 0) mActivity.openRightPanel();
             mVirtualControlKeyDown = down;
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            // etctermux: 长按音量+ 打开左侧功能抽屉
+            if (down && event.getRepeatCount() > 0) mActivity.getDrawer().openDrawer(Gravity.LEFT);
             mVirtualFnKeyDown = down;
             return true;
         }

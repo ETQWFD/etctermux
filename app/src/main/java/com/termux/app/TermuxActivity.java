@@ -9,9 +9,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.widget.TextView;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Gravity;
@@ -608,6 +612,113 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         findViewById(R.id.etctermux_sites_button).setOnClickListener(v -> runEtcScript("sites"));
         findViewById(R.id.etctermux_sudo_button).setOnClickListener(v -> runEtcScript("sudo"));
         findViewById(R.id.etctermux_about_button).setOnClickListener(v -> showEtcTermuxAboutDialog());
+        setupRightPanelView();
+    }
+
+    /** etctermux: 右侧面板（AI 帮助 + 自定义配置）。 */
+    private void setupRightPanelView() {
+        // 快捷操作
+        findViewById(R.id.right_new_session_button).setOnClickListener(v -> {
+            getDrawer().closeDrawers();
+            mTermuxTerminalSessionActivityClient.addNewSession(false, null);
+        });
+        findViewById(R.id.right_settings_button).setOnClickListener(v -> {
+            getDrawer().closeDrawers();
+            startActivity(new Intent(this, SettingsActivity.class));
+        });
+        findViewById(R.id.right_about_button).setOnClickListener(v -> {
+            getDrawer().closeDrawers();
+            showEtcTermuxAboutDialog();
+        });
+
+        // AI 配置持久化
+        SharedPreferences prefs = getSharedPreferences("etctermux_ai", MODE_PRIVATE);
+        EditText baseUrl = findViewById(R.id.ai_base_url);
+        EditText apiKey = findViewById(R.id.ai_api_key);
+        EditText model = findViewById(R.id.ai_model);
+        EditText input = findViewById(R.id.ai_input);
+        TextView reply = findViewById(R.id.ai_reply);
+        baseUrl.setText(prefs.getString("base_url", "https://api.openai.com/v1/chat/completions"));
+        apiKey.setText(prefs.getString("api_key", ""));
+        model.setText(prefs.getString("model", "gpt-3.5-turbo"));
+
+        findViewById(R.id.ai_save_button).setOnClickListener(v -> {
+            prefs.edit()
+                .putString("base_url", baseUrl.getText().toString().trim())
+                .putString("api_key", apiKey.getText().toString().trim())
+                .putString("model", model.getText().toString().trim())
+                .apply();
+            showToast("AI 配置已保存", false);
+        });
+
+        findViewById(R.id.ai_send_button).setOnClickListener(v -> {
+            String url = baseUrl.getText().toString().trim();
+            String key = apiKey.getText().toString().trim();
+            String mdl = model.getText().toString().trim();
+            String question = input.getText().toString().trim();
+            if (url.isEmpty() || mdl.isEmpty() || question.isEmpty()) {
+                reply.setText("请先填写接口地址、模型和问题（Key 可留空用于本地 Ollama 等无需鉴权端点）。");
+                return;
+            }
+            sendAiRequest(url, key, mdl, question, reply);
+        });
+    }
+
+    /** etctermux: 打开右侧面板。 */
+    public void openRightPanel() {
+        DrawerLayout drawer = getDrawer();
+        if (drawer != null && !drawer.isDrawerOpen(Gravity.END)) {
+            drawer.openDrawer(Gravity.END);
+        }
+    }
+
+    /** etctermux: 发送 AI 请求（OpenAI 兼容 /chat/completions）。 */
+    private void sendAiRequest(final String url, final String key, final String model,
+                               final String question, final TextView reply) {
+        reply.setText("正在请求 AI…");
+        new Thread(() -> {
+            try {
+                String body = "{\"model\":\"" + model + "\",\"messages\":[{\"role\":\"user\",\"content\":\"" +
+                        question.replace("\\", "\\\\").replace("\"", "\\\"") + "\"}]}";
+                java.net.URL u = new java.net.URL(url);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) u.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(120000);
+                conn.setRequestProperty("Content-Type", "application/json");
+                if (!key.isEmpty()) conn.setRequestProperty("Authorization", "Bearer " + key);
+                conn.setDoOutput(true);
+                conn.getOutputStream().write(body.getBytes("UTF-8"));
+                int code = conn.getResponseCode();
+                java.io.InputStream is = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
+                StringBuilder sb = new StringBuilder();
+                byte[] buf = new byte[4096];
+                int n;
+                try (java.io.InputStream in = is) {
+                    while ((n = in.read(buf)) != -1) sb.append(new String(buf, 0, n, "UTF-8"));
+                }
+                String result = sb.toString();
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (code == 200) {
+                        String text = parseAiReply(result);
+                        reply.setText(text == null ? "解析失败，原始返回：\n" + result : text);
+                    } else {
+                        reply.setText("请求失败（HTTP " + code + "）：\n" + result);
+                    }
+                });
+            } catch (Exception e) {
+                new Handler(Looper.getMainLooper()).post(() -> reply.setText("请求异常：" + e.getMessage()));
+            }
+        }).start();
+    }
+
+    private static String parseAiReply(String json) {
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(json);
+            return obj.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content").trim();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** 在新建会话中执行 etctermux 功能脚本。 */
@@ -625,7 +736,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         new AlertDialog.Builder(this)
             .setTitle("etctermux 正版信息")
             .setMessage("etctermux v" + BuildConfig.VERSION_NAME +
-                "\n开发者: etc\n官网: https://etc.tw.kg\n联系: 2416444244@qq.com\n\n" +
+                "\n开发者: etc\n项目标识: com.termux.etc\n官网: https://etc.tw.kg\n联系: 2416444244@qq.com\n\n" +
+                "（安装包系统包名保持 com.termux 以兼容引导程序，与官方 Termux / ZeroTermux 一致）\n\n" +
                 "正版签名校验已启用：非官方签名版本将无法使用。\n\n" +
                 "免责声明：本软件为白帽安全测试与学习工具，如造成任何损失，etc 团队不负任何责任。")
             .setPositiveButton(android.R.string.ok, null)
@@ -639,7 +751,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     @SuppressLint("RtlHardcoded")
     @Override
     public void onBackPressed() {
-        if (getDrawer().isDrawerOpen(Gravity.LEFT)) {
+        if (getDrawer().isDrawerOpen(Gravity.LEFT) || getDrawer().isDrawerOpen(Gravity.END)) {
             getDrawer().closeDrawers();
         } else {
             finishActivityIfNotFinishing();

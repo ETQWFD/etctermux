@@ -170,6 +170,162 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- etctermux 右侧面板：AI 帮助 + 自定义配置 -->
+            <LinearLayout
+                android:id="@+id/right_drawer"
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:orientation="vertical"
+                android:background="#FF111111"
+                android:padding="10dp"
+                android:descendantFocusability="blocksDescendants">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="⚙ etctermux 控制台"
+                    android:textSize="15sp"
+                    android:padding="6dp"
+                    android:textStyle="bold"
+                    android:textColor="#00E676" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="AI 帮助（OpenAI 兼容接口，可填 DeepSeek / 本地 Ollama 等）"
+                    android:textSize="11sp"
+                    android:padding="4dp"
+                    android:textColor="#FFAAAAAA" />
+
+                <EditText
+                    android:id="@+id/ai_base_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:inputType="textUri"
+                    android:hint="接口地址，如 https://api.openai.com/v1/chat/completions"
+                    android:textSize="11sp"
+                    android:background="#FF222222"
+                    android:padding="6dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#FF888888" />
+
+                <EditText
+                    android:id="@+id/ai_api_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:inputType="textPassword"
+                    android:hint="API Key（保存在本机）"
+                    android:textSize="11sp"
+                    android:background="#FF222222"
+                    android:padding="6dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#FF888888" />
+
+                <EditText
+                    android:id="@+id/ai_model"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:inputType="text"
+                    android:hint="模型，如 gpt-3.5-turbo / deepseek-chat"
+                    android:textSize="11sp"
+                    android:background="#FF222222"
+                    android:padding="6dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#FF888888" />
+
+                <EditText
+                    android:id="@+id/ai_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:inputType="textMultiLine"
+                    android:hint="输入问题，回车发送…"
+                    android:textSize="12sp"
+                    android:background="#FF222222"
+                    android:padding="6dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#FF888888" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/ai_send_button"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="发送" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/ai_save_button"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="保存配置" />
+                </LinearLayout>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="6dp"
+                    android:background="#FF1A1A1A">
+
+                    <TextView
+                        android:id="@+id/ai_reply"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="AI 回复将显示在这里。\n\n说明：AI 帮助需自行填写接口地址与 Key（支持任何 OpenAI 兼容端点），数据仅在本机与你的接口之间传输。"
+                        android:textSize="12sp"
+                        android:padding="8dp"
+                        android:textColor="#FFDDDDDD" />
+                </ScrollView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/right_new_session_button"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="新建会话" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/right_settings_button"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="设置" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/right_about_button"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="关于" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/right_version_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="etctermux · 标识 com.termux.etc · v1.3.0"
+                    android:textSize="10sp"
+                    android:padding="4dp"
+                    android:textColor="#FF777777" />
+            </LinearLayout>
+
         </androidx.drawerlayout.widget.DrawerLayout>
 
         <androidx.viewpager.widget.ViewPager

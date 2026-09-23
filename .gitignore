@@ -41,3 +41,4 @@ Thumbs.db
 # Signing keystore (private)
 *.jks
 offline-*.tar.xz
+build-v*.log

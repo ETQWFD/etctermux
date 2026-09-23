@@ -129,7 +129,7 @@ case "$1" in
     update) bash "$ETC/etcupdate"; exit 0 ;;
     sites) sites_menu; exit 0 ;;
     sudo) bash "$ETC/sudo" /bin/bash; exit 0 ;;
-    about) echo "开发者: etc | 版本: v$VER | 官网: https://etc.tw.kg | 联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; exit 0 ;;
+    about) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; exit 0 ;;
 esac
 
 while true; do
@@ -152,7 +152,7 @@ while true; do
         4) sites_menu ;;
         5) bash "$ETC/sudo" /bin/bash ;;
         6) storage_menu ;;
-        7) echo "开发者: etc | 版本: v$VER | 官网: https://etc.tw.kg | 联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate 可直接调用对应功能" ;;
+        7) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate 可直接调用对应功能" ;;
         0) break ;;
         *) echo "无效选项" ;;
     esac
