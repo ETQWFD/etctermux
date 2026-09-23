@@ -18,32 +18,42 @@ install_pkgs() {
     done
 }
 
+install_pip() {
+    local label="$1"; shift
+    echo "==> pip 安装 [$label]..."
+    for p in "$@"; do
+        if python -m pip install --break-system-packages --quiet "$p" 2>/dev/null; then
+            echo "    ✓ pip: $p"
+        else
+            echo "    ✗ pip: $p (失败/跳过)"
+        fi
+    done
+}
+
 tools_menu() {
     while true; do
         echo
         echo "======== 安装安全测试工具 (etctermux) ========"
-        echo "  1) 信息收集     (nmap masscan recon-ng sherlock theharvester ...)"
-        echo "  2) 漏洞扫描     (nikto nuclei wpscan gobuster ffuf wfuzz ...)"
-        echo "  3) Web 渗透     (sqlmap commix wafw00f xsstrike ...)"
-        echo "  4) 密码攻击     (hydra john crunch medusa wordlists ...)"
-        echo "  5) 无线安全     (aircrack-ng wifite ...)"
-        echo "  6) 嗅探/代理    (bettercap tcpdump netcat ...)"
-        echo "  7) 取证分析     (binwalk foremost steghide exiftool ...)"
-        echo "  8) 完整 Kali 环境 (proot-distro install kali，含全部 Kali 工具)"
-        echo "  9) 全部核心工具 (以上轻量工具全部安装)"
+        echo "  1) 信息收集     (apt: nmap dnsutils whois traceroute | pip: theharvester sherlock sublist3r)"
+        echo "  2) 漏洞扫描     (apt: dirb | pip: wfuzz)"
+        echo "  3) Web 渗透     (pip: sqlmap xsstrike commix wafw00f)"
+        echo "  4) 密码攻击     (apt: crunch | 说明: hydra/john 已从官方源下架)"
+        echo "  5) 嗅探/代理    (apt: netcat-openbsd socat)"
+        echo "  6) 取证分析     (apt: binwalk steghide exiftool)"
+        echo "  7) 完整 Kali 环境 (proot-distro install kali，联网下载，含全部 Kali 工具)"
+        echo "  8) 全部核心工具 (上面所有 apt 工具一键装完)"
         echo "  0) 返回上级菜单"
         printf "请选择: "
         read -r opt
         case "$opt" in
-            1) install_pkgs "信息收集" nmap masscan recon-ng sherlock theharvester dnsutils whois traceroute ;;
-            2) install_pkgs "漏洞扫描" nikto nuclei wpscan gobuster ffuf wfuzz dirb ;;
-            3) install_pkgs "Web 渗透" sqlmap commix wafw00f xsstrike ;;
-            4) install_pkgs "密码攻击" hydra john crunch medusa wordlists ;;
-            5) install_pkgs "无线安全" aircrack-ng wifite ;;
-            6) install_pkgs "嗅探/代理" bettercap tcpdump netcat ;;
-            7) install_pkgs "取证分析" binwalk foremost steghide exiftool ;;
-            8) echo "安装完整 Kali 环境（体积较大，请耐心等待）..."; pkg install -y proot-distro && proot-distro install kali && echo "启动: proot-distro login kali" ;;
-            9) install_pkgs "核心工具" nmap masscan recon-ng sherlock theharvester dnsutils whois traceroute nikto nuclei wpscan gobuster ffuf wfuzz sqlmap commix wafw00f xsstrike hydra john crunch medusa wordlists aircrack-ng tcpdump netcat binwalk foremost steghide exiftool bettercap ;;
+            1) install_pkgs "信息收集(apt)" nmap dnsutils whois traceroute; install_pip "信息收集(pip)" theharvester sherlock sublist3r ;;
+            2) install_pkgs "漏洞扫描(apt)" dirb; install_pip "漏洞扫描(pip)" wfuzz ;;
+            3) install_pip "Web 渗透(pip)" sqlmap xsstrike commix wafw00f ;;
+            4) install_pkgs "密码攻击(apt)" crunch ;;
+            5) install_pkgs "嗅探/代理(apt)" netcat-openbsd socat ;;
+            6) install_pkgs "取证分析(apt)" binwalk steghide exiftool ;;
+            7) echo "安装完整 Kali 环境（体积较大，需联网，请耐心等待）..."; apt-get install -y proot-distro >/dev/null 2>&1 && proot-distro install kali && echo "启动完整 Kali: proot-distro login kali" || echo "安装失败，请检查网络后重试" ;;
+            8) install_pkgs "核心工具(apt)" nmap dnsutils whois traceroute dirb netcat-openbsd socat binwalk steghide exiftool crunch htop tmux ;;
             0) return ;;
             *) echo "无效选项" ;;
         esac

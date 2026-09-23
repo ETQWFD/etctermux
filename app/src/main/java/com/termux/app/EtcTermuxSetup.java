@@ -1,6 +1,7 @@
 package com.termux.app;
 
 import android.content.Context;
+import android.os.Build;
 import android.system.Os;
 import android.util.Log;
 
@@ -42,7 +43,14 @@ public final class EtcTermuxSetup {
             for (String name : SCRIPTS) copyAsset(context, new File(etcDir, name), name);
             for (String name : STATIC_FILES) copyAsset(context, new File(etcDir, name), name);
 
-            // 2. 赋予脚本可执行权限
+            // 2. 复制按设备 ABI 匹配的离线工具包（首次启动离线安装用）
+            String offlineAsset = getOfflineAssetName(context);
+            if (offlineAsset != null) {
+                copyAsset(context, new File(etcDir, "offline.tar.xz"), offlineAsset);
+                Log.i(LOG_TAG, "Bundled offline toolchain: " + offlineAsset);
+            }
+
+            // 3. 赋予脚本可执行权限
             for (String name : SCRIPTS) {
                 File f = new File(etcDir, name);
                 if (f.exists()) f.setExecutable(true, false);
@@ -86,6 +94,24 @@ public final class EtcTermuxSetup {
             int n;
             while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
         }
+    }
+
+    /** 按设备 ABI 匹配内置离线工具包资源名。 */
+    private static String getOfflineAssetName(Context context) {
+        try {
+            for (String abi : Build.SUPPORTED_ABIS) {
+                switch (abi) {
+                    case "arm64-v8a": return "offline-aarch64.tar.xz";
+                    case "armeabi-v7a": return "offline-arm.tar.xz";
+                    case "x86_64": return "offline-x86_64.tar.xz";
+                    case "x86": return "offline-i686.tar.xz";
+                    default: break;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Cannot detect ABI: " + e.getMessage());
+        }
+        return null;
     }
 
     private static void linkBin(String prefix, String name) {

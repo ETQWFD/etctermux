@@ -130,11 +130,27 @@ final class TermuxInstaller {
                         return;
                     }
 
-                    // Delete prefix directory or any file at its destination
-                    error = FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
-                    if (error != null) {
-                        showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
-                        return;
+                    // etctermux: 若已存在非 etctermux 的 Termux 数据（如官方 Termux 数据），
+                    // 备份而非删除，避免共用容器导致原数据丢失
+                    File prefixDir = new File(TERMUX_PREFIX_DIR_PATH);
+                    if (prefixDir.exists()) {
+                        File marker = new File(TERMUX_PREFIX_DIR_PATH + "/etc/etctermux");
+                        if (marker.exists()) {
+                            // 自身旧版本数据：直接删除重建
+                            error = FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
+                        } else {
+                            // 其他 Termux（官方版等）数据：备份到 .bak 目录
+                            String backupPath = TERMUX_PREFIX_DIR_PATH + ".bak-" + System.currentTimeMillis();
+                            if (prefixDir.renameTo(new File(backupPath))) {
+                                Logger.logInfo(LOG_TAG, "Backed up existing non-etctermux prefix to " + backupPath);
+                            } else {
+                                error = FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
+                            }
+                        }
+                        if (error != null) {
+                            showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
+                            return;
+                        }
                     }
 
                     // Create prefix staging directory if it does not already exist and set required permissions
