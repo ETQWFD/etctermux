@@ -122,13 +122,15 @@ storage_menu() {
     done
 }
 
-# 支持子命令: kali mirror|tools|update|sites|sudo|about（供左侧抽屉/快捷调用）
+# 支持子命令: kali mirror|tools|update|sites|sudo|distro|backup|about（供左侧抽屉/快捷调用）
 case "$1" in
     mirror) bash "$ETC/mirror"; exit 0 ;;
     tools) tools_menu; exit 0 ;;
     update) bash "$ETC/etcupdate"; exit 0 ;;
     sites) sites_menu; exit 0 ;;
     sudo) bash "$ETC/sudo" /bin/bash; exit 0 ;;
+    distro) bash "$ETC/distro"; exit 0 ;;
+    backup) bash "$ETC/backup"; exit 0 ;;
     about) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; exit 0 ;;
 esac
 
@@ -141,7 +143,9 @@ while true; do
     echo "  4) 打开白帽学习/测试网站"
     echo "  5) sudo 模拟 root（设备未 root 也可用）"
     echo "  6) 共享存储管理（termux_kali_etc）"
-    echo "  7) 关于/帮助"
+    echo "  7) Linux 发行版安装（kali/ubuntu/debian 等，proot 模拟）"
+    echo "  8) 容器备份与恢复"
+    echo "  9) 关于/帮助"
     echo "  0) 退出"
     printf "请选择: "
     read -r opt
@@ -152,7 +156,9 @@ while true; do
         4) sites_menu ;;
         5) bash "$ETC/sudo" /bin/bash ;;
         6) storage_menu ;;
-        7) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate 可直接调用对应功能" ;;
+        7) bash "$ETC/distro" ;;
+        8) bash "$ETC/backup" ;;
+        9) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate / distro / backup 可直接调用对应功能" ;;
         0) break ;;
         *) echo "无效选项" ;;
     esac

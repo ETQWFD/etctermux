@@ -1,0 +1,110 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux backup：容器备份与恢复（参考 ZeroTermux 功能） =================
+# 备份 $PREFIX(usr) 与 $HOME 到 /storage/emulated/0/termux_kali_etc/backup/
+# 提示: 备份/恢复是完整快照，恢复会覆盖当前容器环境（home 数据也会覆盖）
+export PATH="$PREFIX/bin:$PATH"
+
+GREEN='\e[1;32m'; YELLOW='\e[1;33m'; RED='\e[1;31m'; RES='\e[0m'
+BACKUP_DIR="${SHARED_STORAGE:-/storage/emulated/0}/termux_kali_etc/backup"
+PREFIX_REAL="${PREFIX:-/data/data/com.termux/files/usr}"
+HOME_REAL="${HOME:-/data/data/com.termux/files/home}"
+TAG="etctermux-$(date +%Y%m%d-%H%M%S)"
+
+mkdir -p "$BACKUP_DIR"
+
+menu() {
+    clear
+    echo -e "${GREEN}===== etctermux 备份与恢复 =====${RES}"
+    echo "  1) 备份容器（usr + home）"
+    echo "  2) 查看已有备份"
+    echo "  3) 恢复备份"
+    echo "  4) 删除备份"
+    echo "  0) 退出"
+    read -r -p "请选择: " input
+    case $input in
+        1) do_backup ;;
+        2) list_backup ;;
+        3) do_restore ;;
+        4) do_delete ;;
+        0) exit 0 ;;
+        *) echo -e "${RED}输入无效${RES}"; sleep 1; menu ;;
+    esac
+}
+
+do_backup() {
+    echo -e "${YELLOW}开始备份（usr≈$(du -sm "$PREFIX_REAL" 2>/dev/null | cut -f1)MB，home≈$(du -sm "$HOME_REAL" 2>/dev/null | cut -f1)MB）…${RES}"
+    if [ ! -w "$BACKUP_DIR" ]; then
+        echo -e "${RED}备份目录不可写: $BACKUP_DIR${RES}"
+        echo -e "${YELLOW}提示: 请在系统设置中允许 etctermux 访问所有文件（存储权限），或先运行 setup 创建目录。${RES}"
+        read -r -p "按回车返回" _; menu; return
+    fi
+    local tarball="$BACKUP_DIR/${TAG}.tar.xz"
+    local manifest="$BACKUP_DIR/${TAG}.txt"
+    {
+        tar -C /data/data/com.termux/files -Jcf "$tarball" usr home 2>/dev/null && \
+        { echo "etctermux 备份 $TAG"; echo "日期: $(date '+%Y-%m-%d %H:%M:%S')"; echo "来源: $PREFIX_REAL / $HOME_REAL"; } > "$manifest" && \
+        echo -e "${GREEN}备份完成: $tarball${RES}" && echo -e "${GREEN}大小: $(du -m "$tarball" | cut -f1) MB${RES}" || \
+        echo -e "${RED}备份失败${RES}"
+    } | tail -3
+    read -r -p "按回车返回" _; menu
+}
+
+list_files() {
+    local found=0
+    for m in "$BACKUP_DIR"/etctermux-*.txt; do
+        [ -e "$m" ] || continue
+        found=1
+        local base="${m%.txt}"
+        echo "  $(basename "$base").tar.xz  ($(du -m "$base.tar.xz" 2>/dev/null | cut -f1)MB)  $(sed -n 2p "$m")"
+    done
+    [ "$found" = 0 ] && echo -e "${YELLOW}暂无备份${RES}"
+}
+
+list_backup() {
+    echo -e "${GREEN}备份列表（$BACKUP_DIR）:${RES}"
+    list_files
+    read -r -p "按回车返回" _; menu
+}
+
+do_restore() {
+    echo -e "${GREEN}备份列表:${RES}"
+    list_files
+    read -r -p "输入要恢复的备份文件名（如 etctermux-20260924-120000.tar.xz），直接回车取消: " name
+    if [ -z "$name" ]; then menu; return; fi
+    local tarball="$BACKUP_DIR/$name"
+    [ -f "$tarball" ] || { echo -e "${RED}备份不存在: $tarball${RES}"; sleep 1; do_restore; return; }
+    echo -e "${RED}警告: 恢复将覆盖当前 usr 与 home 目录！${RES}"
+    read -r -p "确认恢复请输 YES: " confirm
+    [ "$confirm" = "YES" ] || { echo "已取消"; menu; return; }
+    echo -e "${YELLOW}正在恢复…${RES}"
+    # 备份当前环境以防万一
+    mv /data/data/com.termux/files/usr /data/data/com.termux/files/usr.bak-$(date +%Y%m%d%H%M%S) 2>/dev/null
+    mv /data/data/com.termux/files/home /data/data/com.termux/files/home.bak-$(date +%Y%m%d%H%M%S) 2>/dev/null
+    mkdir -p /data/data/com.termux/files/usr /data/data/com.termux/files/home
+    if tar -C /data/data/com.termux/files -Jxf "$tarball"; then
+        echo -e "${GREEN}恢复完成，请重启应用${RES}"
+    else
+        echo -e "${RED}恢复失败，已尝试保留 .bak 目录${RES}"
+    fi
+    read -r -p "按回车返回" _; menu
+}
+
+do_delete() {
+    echo -e "${GREEN}备份列表:${RES}"
+    list_files
+    read -r -p "输入要删除的备份文件名，直接回车取消: " name
+    if [ -n "$name" ]; then
+        rm -f "$BACKUP_DIR/$name" "$BACKUP_DIR/${name%.tar.xz}.txt" && echo -e "${GREEN}已删除${RES}"
+    fi
+    read -r -p "按回车返回" _; menu
+}
+
+case "${1:-}" in
+    backup|do) do_backup ;;
+    list) list_backup ;;
+    restore) do_restore ;;
+    help|--help|-h)
+        echo "用法: backup [backup|list|restore]"
+        echo "备份目录: /storage/emulated/0/termux_kali_etc/backup" ;;
+    *) menu ;;
+esac

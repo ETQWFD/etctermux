@@ -24,7 +24,7 @@ public final class EtcTermuxSetup {
 
     private static final String LOG_TAG = "EtcTermuxSetup";
     private static final String ASSET_DIR = "etctermux";
-    private static final String[] SCRIPTS = {"kali", "mirror", "etcupdate", "setup.sh", "sudo"};
+    private static final String[] SCRIPTS = {"kali", "mirror", "etcupdate", "setup.sh", "sudo", "distro", "backup"};
     private static final String[] STATIC_FILES = {"banner.txt", "bashrc", "version"};
 
     private EtcTermuxSetup() {}
@@ -68,6 +68,8 @@ public final class EtcTermuxSetup {
             linkBin(prefix, "mirror");
             linkBin(prefix, "etcupdate");
             linkBin(prefix, "sudo");
+            linkBin(prefix, "distro");
+            linkBin(prefix, "backup");
 
             // 6. 写入烘烤引导版本标记（TermuxInstaller 据此判断是否需重建容器）
             writeString(new File(etcDir, "baked_version"), "1.3.0\n");

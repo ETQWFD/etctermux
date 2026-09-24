@@ -1,0 +1,95 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux distro：Linux 发行版管理（参考 ZeroTermux 功能） =================
+# 基于 proot-distro 安装/登录/删除 Kali、Ubuntu、Debian、CentOS、Arch、Fedora 等发行版
+# 提示: 为防与内置工具冲突，首次使用需先同步发行版索引: proot-distro sync
+export PATH="$PREFIX/bin:$PATH"
+
+GREEN='\e[1;32m'; YELLOW='\e[1;33m'; RED='\e[1;31m'; BLUE='\e[1;34m'; RES='\e[0m'
+
+menu() {
+    clear
+    echo -e "${GREEN}===== etctermux 发行版管理 (proot-distro) =====${RES}"
+    echo -e "${YELLOW}请选择系统:${RES}"
+    echo "  1) kali         2) ubuntu      3) debian"
+    echo "  4) centos       5) archlinux   6) fedora"
+    echo "  7) alpine       8) opensuse"
+    echo "  ----------------------------------"
+    echo "  l) 已安装列表   r) 移除发行版   u) 更新索引"
+    echo "  9) 使用帮助     0) 退出"
+    echo "----------------------------------"
+    read -r -p "请选择: " input
+    case $input in
+        1) login_distro kali ;;
+        2) login_distro ubuntu ;;
+        3) login_distro debian ;;
+        4) login_distro centos ;;
+        5) login_distro archlinux ;;
+        6) login_distro fedora ;;
+        7) login_distro alpine ;;
+        8) login_distro opensuse ;;
+        l) list_distro ;;
+        r) remove_distro ;;
+        u) sync_distro ;;
+        9) help_text ;;
+        0) exit 0 ;;
+        *) echo -e "${RED}输入无效${RES}"; read -r -p "按回车继续" _; menu ;;
+    esac
+}
+
+login_distro() {
+    local name="$1"
+    if ! proot-distro ls "$name" >/dev/null 2>&1; then
+        echo -e "${YELLOW}未检测到 $name，开始安装…${RES}"
+        proot-distro install "$name" || { echo -e "${RED}安装失败，请检查网络或换镜像源后重试${RES}"; read -r -p "按回车返回" _; menu; return; }
+    fi
+    echo -e "${GREEN}登录 $name（输入 exit 返回）${RES}"
+    proot-distro login "$name"
+    read -r -p "按回车返回菜单" _
+    menu
+}
+
+list_distro() {
+    echo -e "${GREEN}已安装发行版:${RES}"
+    proot-distro list
+    read -r -p "按回车返回" _
+    menu
+}
+
+remove_distro() {
+    echo -e "${YELLOW}已安装发行版:${RES}"
+    proot-distro list
+    read -r -p "输入要移除的发行版名称（如 kali），直接回车取消: " name
+    if [ -n "$name" ]; then
+        proot-distro remove "$name" && echo -e "${GREEN}已移除 $name${RES}"
+    fi
+    read -r -p "按回车返回" _
+    menu
+}
+
+sync_distro() {
+    echo -e "${BLUE}同步发行版索引…${RES}"
+    proot-distro sync && echo -e "${GREEN}索引已更新${RES}"
+    read -r -p "按回车返回" _
+    menu
+}
+
+help_text() {
+    echo -e "${BLUE}用法:${RES}"
+    echo "  distro                   打开发行版菜单"
+    echo "  proot-distro install kali  直接安装 Kali 发行版"
+    echo "  proot-distro login kali    登录已安装的发行版"
+    echo "  proot-distro list          查看已安装发行版"
+    echo -e "${YELLOW}说明: 发行版运行在 proot 模拟环境（无需 root），仅限授权环境下的安全测试与学习。${RES}"
+    read -r -p "按回车返回" _
+    menu
+}
+
+case "${1:-}" in
+    list) proot-distro list; exit 0 ;;
+    install) shift; proot-distro install "$@" ; exit $? ;;
+    login) shift; proot-distro login "$@"; exit $? ;;
+    remove) shift; proot-distro remove "$@"; exit $? ;;
+    sync) proot-distro sync; exit $? ;;
+    help|--help|-h) help_text; exit 0 ;;
+    *) menu ;;
+esac

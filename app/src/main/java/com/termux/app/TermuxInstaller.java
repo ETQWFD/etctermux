@@ -430,7 +430,7 @@ final class TermuxInstaller {
             if (!bakedMarker.exists()) return false;
             try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(bakedMarker))) {
                 String line = r.readLine();
-                return line != null && line.trim().equals("1.3.0");
+                return line != null && line.trim().equals("1.4.0");
             }
         } catch (Exception e) {
             return false;
