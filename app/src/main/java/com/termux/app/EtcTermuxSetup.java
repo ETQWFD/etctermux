@@ -69,6 +69,9 @@ public final class EtcTermuxSetup {
             linkBin(prefix, "etcupdate");
             linkBin(prefix, "sudo");
 
+            // 6. 写入烘烤引导版本标记（TermuxInstaller 据此判断是否需重建容器）
+            writeString(new File(etcDir, "baked_version"), "1.3.0\n");
+
             Log.i(LOG_TAG, "etctermux customization applied to " + etcDir);
         } catch (Exception e) {
             Log.e(LOG_TAG, "Failed to apply etctermux customization", e);

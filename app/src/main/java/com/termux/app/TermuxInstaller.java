@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+import android.system.ErrnoException;
 import android.system.Os;
 import android.util.Pair;
 import android.view.WindowManager;
@@ -104,7 +105,19 @@ final class TermuxInstaller {
 
         // If prefix directory exists, even if its a symlink to a valid directory and symlink is not broken/dangling
         if (FileUtils.directoryFileExists(TERMUX_PREFIX_DIR_PATH, true)) {
-            if (TermuxFileUtils.isTermuxPrefixDirectoryEmpty()) {
+            // etctermux: 旧版容器升级检测——v1.3.0 起工具烘烤进 bootstrap，
+            // 若检测到本应用旧版本数据（无 baked_version 标记），强制重建 usr 以解压内置工具
+            File marker = new File(TERMUX_PREFIX_DIR_PATH + "/etc/etctermux");
+            File bakedMarker = new File(TERMUX_PREFIX_DIR_PATH + "/etc/etctermux/baked_version");
+            boolean needRebake = marker.exists() && !isBakedVersionCurrent(bakedMarker);
+            if (needRebake) {
+                Logger.logInfo(LOG_TAG, "etctermux: 检测到旧版本容器，重建 usr 以安装内置工具引导包（home 目录保留）");
+                Error delError = FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
+                if (delError != null) {
+                    showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(delError));
+                    return;
+                }
+            } else if (TermuxFileUtils.isTermuxPrefixDirectoryEmpty()) {
                 Logger.logInfo(LOG_TAG, "The termux prefix directory \"" + TERMUX_PREFIX_DIR_PATH + "\" exists but is empty or only contains specific unimportant files.");
             } else {
                 whenDone.run();
@@ -223,6 +236,11 @@ final class TermuxInstaller {
                     if (symlinks.isEmpty())
                         throw new RuntimeException("No SYMLINKS.txt encountered");
                     for (Pair<String, String> symlink : symlinks) {
+                        // etctermux: 防御重复/残留链接，已存在则跳过，避免 EEXIST 导致安装失败
+                        try {
+                            Os.lstat(symlink.second);
+                            continue; // 已存在（含悬空链接）
+                        } catch (ErrnoException ignored) { }
                         Os.symlink(symlink.first, symlink.second);
                     }
 
@@ -405,5 +423,18 @@ final class TermuxInstaller {
     }
 
     public static native byte[] getZip();
+
+    /** etctermux: 读取 baked_version 标记，判断是否已安装当前烘烤引导版本。 */
+    private static boolean isBakedVersionCurrent(File bakedMarker) {
+        try {
+            if (!bakedMarker.exists()) return false;
+            try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(bakedMarker))) {
+                String line = r.readLine();
+                return line != null && line.trim().equals("1.3.0");
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
 }
