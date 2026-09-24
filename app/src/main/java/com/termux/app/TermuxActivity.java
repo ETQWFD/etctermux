@@ -1,6 +1,7 @@
 package com.termux.app;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -260,6 +261,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         setToggleKeyboardView();
 
         setEtcTermuxPanelView();
+
+        // etctermux: 启动时静默检查更新（发现新版本弹窗，下载后调用系统安装程序）
+        try { UpdateInstaller.checkOnLaunch(this); } catch (Throwable t) { Log.e(LOG_TAG, "etctermux update check failed", t); }
 
         registerForContextMenu(mTerminalView);
 
