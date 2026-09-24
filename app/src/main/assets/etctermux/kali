@@ -42,6 +42,7 @@ tools_menu() {
         echo "  6) 取证分析     (apt: binwalk steghide exiftool)"
         echo "  7) 完整 Kali 环境 (proot-distro install kali，联网下载，含全部 Kali 工具)"
         echo "  8) 全部核心工具 (上面所有 apt 工具一键装完)"
+        echo "  9) 抓包工具     (tcpdump + scapy，打开抓包菜单)"
         echo "  0) 返回上级菜单"
         printf "请选择: "
         read -r opt
@@ -54,6 +55,7 @@ tools_menu() {
             6) install_pkgs "取证分析(apt)" binwalk steghide exiftool ;;
             7) echo "安装完整 Kali 环境（体积较大，需联网，请耐心等待）..."; apt-get install -y proot-distro >/dev/null 2>&1 && proot-distro install kali && echo "启动完整 Kali: proot-distro login kali" || echo "安装失败，请检查网络后重试" ;;
             8) install_pkgs "核心工具(apt)" nmap dnsutils whois traceroute dirb netcat-openbsd socat binwalk steghide exiftool crunch htop tmux ;;
+            9) bash "$ETC/sniff" ;;
             0) return ;;
             *) echo "无效选项" ;;
         esac
@@ -131,6 +133,7 @@ case "$1" in
     sudo) bash "$ETC/sudo" /bin/bash; exit 0 ;;
     distro) bash "$ETC/distro"; exit 0 ;;
     backup) bash "$ETC/backup"; exit 0 ;;
+    sniff) bash "$ETC/sniff"; exit 0 ;;
     about) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; exit 0 ;;
 esac
 
@@ -145,7 +148,8 @@ while true; do
     echo "  6) 共享存储管理（termux_kali_etc）"
     echo "  7) Linux 发行版安装（kali/ubuntu/debian 等，proot 模拟）"
     echo "  8) 容器备份与恢复"
-    echo "  9) 关于/帮助"
+    echo "  9) 抓包/流量分析（tcpdump + scapy）"
+    echo " 10) 关于/帮助"
     echo "  0) 退出"
     printf "请选择: "
     read -r opt
@@ -158,7 +162,8 @@ while true; do
         6) storage_menu ;;
         7) bash "$ETC/distro" ;;
         8) bash "$ETC/backup" ;;
-        9) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate / distro / backup 可直接调用对应功能" ;;
+        9) bash "$ETC/sniff" ;;
+       10) echo "开发者: etc | 版本: v$VER | 标识: com.termux.etc | 官网: https://etc.tw.kg"; echo "联系: 2416444244@qq.com"; echo "仅限授权环境下的安全测试与学习"; echo "输入 mirror / etcupdate / distro / backup / sniff 可直接调用对应功能" ;;
         0) break ;;
         *) echo "无效选项" ;;
     esac

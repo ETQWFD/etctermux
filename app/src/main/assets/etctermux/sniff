@@ -1,0 +1,101 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ================= etctermux sniff：抓包/流量分析工具 =================
+# 优先 tcpdump（若官方源仍提供），否则使用 scapy（纯 Python，离线可用）
+# 提示: 抓包需网络访问权限；抓取他人流量仅限授权环境，请遵守当地法律法规
+export PATH="$PREFIX/bin:$PATH"
+
+GREEN='\e[1;32m'; YELLOW='\e[1;33m'; RED='\e[1;31m'; BLUE='\e[1;34m'; RES='\e[0m'
+
+ensure_tools() {
+    # 1. tcpdump
+    if ! command -v tcpdump >/dev/null 2>&1; then
+        echo -e "${YELLOW}安装 tcpdump…${RES}"
+        apt-get install -y tcpdump >/dev/null 2>&1 && echo -e "${GREEN}✓ tcpdump 安装成功${RES}" \
+            || echo -e "${YELLOW}✗ tcpdump 当前源不可用，将改用 scapy 抓包${RES}"
+    fi
+    # 2. scapy
+    if ! python -c "import scapy" >/dev/null 2>&1; then
+        echo -e "${YELLOW}安装 scapy（纯 Python 抓包库）…${RES}"
+        python -m pip install --break-system-packages -q scapy 2>/dev/null \
+            && echo -e "${GREEN}✓ scapy 安装成功${RES}" \
+            || echo -e "${RED}✗ scapy 安装失败，请先检查 python/pip 是否可用${RES}"
+    fi
+}
+
+menu() {
+    clear
+    echo -e "${GREEN}===== etctermux 抓包/流量分析 =====${RES}"
+    echo "  1) 安装/检查抓包工具（tcpdump + scapy）"
+    echo "  2) 实时抓包（tcpdump，默认全部接口）"
+    echo "  3) ARP 扫描本网段主机（scapy）"
+    echo "  4) 抓 HTTP 明文流量示例（scapy）"
+    echo "  5) tcpdump 常用命令速查"
+    echo "  0) 退出"
+    read -r -p "请选择: " opt
+    case "$opt" in
+        1) ensure_tools; read -r -p "按回车返回" _; menu ;;
+        2)
+            ensure_tools
+            if command -v tcpdump >/dev/null 2>&1; then
+                echo -e "${YELLOW}开始抓包（Ctrl+C 停止），默认仅显示包头…${RES}"
+                echo -e "${BLUE}示例: tcpdump -i any -n${RES}"
+                sudo tcpdump -i any -n 2>/dev/null || tcpdump -i any -n
+            else
+                echo -e "${RED}未安装 tcpdump，请先选 1)${RES}"
+            fi
+            read -r -p "按回车返回" _; menu ;;
+        3)
+            ensure_tools
+            python - << 'EOF'
+import sys
+try:
+    from scapy.all import arping, conf
+except Exception:
+    print("scapy 未就绪，请先选择 1) 安装"); sys.exit(1)
+conf.verb = 0
+ip = input("输入网段（如 192.168.1.0/24，回车默认 192.168.1.0/24）: ").strip() or "192.168.1.0/24"
+print("ARP 扫描 %s ..." % ip)
+ans, _ = arping(ip, timeout=2, verbose=0)
+for s, r in ans:
+    print("  %s -> %s" % (r.psrc, r.hwsrc))
+print("完成，共发现 %d 台主机" % len(ans))
+EOF
+            read -r -p "按回车返回" _; menu ;;
+        4)
+            ensure_tools
+            python - << 'EOF'
+import sys, os, time
+try:
+    from scapy.all import sniff, conf, TCP, Raw
+except Exception:
+    print("scapy 未就绪，请先选择 1) 安装"); sys.exit(1)
+conf.verb = 0
+print("抓取 HTTP 明文流量（80 端口，10 秒后自动停止，Ctrl+C 提前停止）...")
+pkts = []
+def cb(p):
+    if p.haslayer(Raw):
+        pay = p[Raw].load.decode("utf-8", "ignore")[:200]
+        print("[%s] %s -> %s | %s" % (time.strftime("%H:%M:%S"), p[1].src, p[1].dst, pay.strip()[:120]))
+sniff(filter="tcp port 80", prn=cb, timeout=10, store=False)
+print("抓包结束")
+EOF
+            read -r -p "按回车返回" _; menu ;;
+        5)
+            echo -e "${BLUE}常用命令:${RES}"
+            echo "  tcpdump -i any -n                 # 查看所有接口流量（不解析域名）"
+            echo "  sudo tcpdump -i any -n            # 以模拟 root 抓包（需 proot）"
+            echo "  tcpdump -i any port 80            # 只看 HTTP 端口"
+            echo "  tcpdump -i any -w /sdcard/termux_kali_etc/cap.pcap   # 保存到共享目录"
+            echo "  python3 -c 'from scapy.all import *; arping(\"192.168.1.0/24\")'  # ARP 扫描"
+            echo -e "${YELLOW}提示: tcpdump 已从官方源下架时可改用 scapy；保存的 pcap 可用 Wireshark 打开分析。${RES}"
+            read -r -p "按回车返回" _; menu ;;
+        0) exit 0 ;;
+        *) echo -e "${RED}输入无效${RES}"; sleep 1; menu ;;
+    esac
+}
+
+case "${1:-}" in
+    install) ensure_tools ;;
+    help|--help|-h) echo "用法: sniff [install|help]；打开发包菜单直接输入 sniff" ;;
+    *) menu ;;
+esac

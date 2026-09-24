@@ -615,6 +615,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         findViewById(R.id.etctermux_distro_button).setOnClickListener(v -> runEtcScript("distro"));
         findViewById(R.id.etctermux_backup_button).setOnClickListener(v -> runEtcScript("backup"));
         findViewById(R.id.etctermux_kali_button).setOnClickListener(v -> runEtcScript("kali"));
+        findViewById(R.id.etctermux_sniff_button).setOnClickListener(v -> runEtcScript("sniff"));
         setupRightPanelView();
     }
 

@@ -173,6 +173,14 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="kali" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/etctermux_sniff_button"
+                            style="?android:attr/buttonBarButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="抓包" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -350,7 +358,7 @@
                     android:id="@+id/right_version_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="etctermux · 标识 com.termux.etc · v1.4.0"
+                    android:text="etctermux · 标识 com.termux.etc · v1.5.0"
                     android:textSize="10sp"
                     android:padding="4dp"
                     android:textColor="#FF777777" />
